@@ -10,66 +10,67 @@ const consultas = [];
 
 //Query params
 app.get('/', (request, response) => {
+  const { profissional } = request.query;
+  
+  if (profissional === undefined) {
+    return response.json(consultas);
+  } else {
+    consultasFiltradas = consultas.filter(el => el.profissional === profissional)
 
-  return response.json(consultas);
+    return response.json(consultasFiltradas)
+  }
+
 });
 
 // request.body
 app.post('/consultas', (request, response) => {
-  const id = uuid();
-  const { profissional, horario } = request.body;
+  try {  
+    const id = uuid();
+    const { profissional, horario } = request.body;
 
-  const consulta = { id, profissional, horario }
+    const consulta = { id, profissional, horario }
 
-  consultas.push(consulta)
+    consultas.push(consulta);
 
- return response.json({ok:'ok'});
+    return response.json(consulta);
+  } catch (err){ 
+    return response.json({ message: err })
+  }
 });
  
 app.put('/consultas/:id', (request, response) => {
   const { id } = request.params;
   const { profissional, horario } = request.body;
 
-  const update = {id, profissional, horario}
   const found = consultas.findIndex(el => el.id === id)
+  if (found < 0) {
+    return response.status(400).json({error: 'não foi possível encontrar essa consulta'})
+  }
+
+  const update = { id, profissional, horario }
   
   consultas.splice(found, 1, {id, profissional, horario})
 
   return response.json(update)
-})
+});
 
 //route params
 app.delete('/consultas/:id', (request, response) => {
-  const { id } = request.params;
+    const { id } = request.params;
 
-  const found = consultas.findIndex(el => el.id === id)
+    const found = consultas.findIndex(el => el.id === id)
 
-  consultas.splice(found, 1)
+    if (found < 0) {
+      return response.status(400).json({error: 'não foi possível encontrar essa consulta'})
+    }
 
-  return response.status(204).json({ message: 'consulta deletada com sucesso'})
+    consultas.splice(found, 1)
+
+    return response.status(204).send();
+
 });
 
 app.listen(3333, () => {
   console.log('🌹 servidor rodando na porta 3333!');
 });
 
-
-// QUERY PARAMS ==> informações passadas na URL | filtros e paginação 
-// http://localhost:3333/?user=felipe&hora=1537
-
-
-
-
-//ROUTE PARAMS ==> informações passadas na URL e Rota no Backend devem coincidir 
-// frontend: http://localhost:3333/consultas/123/1430
-// backend: app.delete('/consultas/:id/:hora', (request, response) => {
-
-// forma um par key/value { id: 123, hora: 1430 } 
-// Serve pra controle e identificação de coisas pra deletar ou alterar
-
-
-
-
-
-// BODY ==> passado no corpo da requisição | geralmente com dados de Formulários 
-// JSON  | usado para criar algo, um cadastro, um novo registro de algo no backend...
