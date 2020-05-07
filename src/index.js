@@ -1,4 +1,5 @@
 const express = require('express');
+const { uuid }= require('uuidv4');
 
 const app = express();
 app.use(express.json()) // <== Sem isso você não cata os body params
@@ -9,27 +10,43 @@ const consultas = [];
 
 //Query params
 app.get('/', (request, response) => {
-  const { user, hora } = request.query;
-  console.log(user) 
-  console.log(hora)
 
-  return response.send('ok!');
+  return response.json(consultas);
 });
 
 // request.body
 app.post('/consultas', (request, response) => {
- const body = request.body;
- console.log(body);
+  const id = uuid();
+  const { profissional, horario } = request.body;
 
- return response.json(body);
+  const consulta = { id, profissional, horario }
+
+  consultas.push(consulta)
+
+ return response.json({ok:'ok'});
 });
+ 
+app.put('/consultas/:id', (request, response) => {
+  const { id } = request.params;
+  const { profissional, horario } = request.body;
 
+  const update = {id, profissional, horario}
+  const found = consultas.findIndex(el => el.id === id)
+  
+  consultas.splice(found, 1, {id, profissional, horario})
 
-app.delete('/consultas/:id/:hora', (request, response) => {
-  const { hora, id } = request.params;
-  console.log(hora)
-  console.log(id)
-  return response.json({ok: 'ok'})
+  return response.json(update)
+})
+
+//route params
+app.delete('/consultas/:id', (request, response) => {
+  const { id } = request.params;
+
+  const found = consultas.findIndex(el => el.id === id)
+
+  consultas.splice(found, 1)
+
+  return response.status(204).json({ message: 'consulta deletada com sucesso'})
 });
 
 app.listen(3333, () => {
@@ -46,7 +63,7 @@ app.listen(3333, () => {
 //ROUTE PARAMS ==> informações passadas na URL e Rota no Backend devem coincidir 
 // frontend: http://localhost:3333/consultas/123/1430
 // backend: app.delete('/consultas/:id/:hora', (request, response) => {
-  
+
 // forma um par key/value { id: 123, hora: 1430 } 
 // Serve pra controle e identificação de coisas pra deletar ou alterar
 
