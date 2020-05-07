@@ -1,14 +1,36 @@
 const express = require('express');
-const { uuid }= require('uuidv4');
+const { uuid, isUuid }= require('uuidv4');
 
 const app = express();
 app.use(express.json()) // <== Sem isso você não cata os body params
 
+app.use(logRequisicoes) // <== Chamada da 1ª middleware
+ 
 
 const consultas = [];
 
+// middleware console log de requisições
+function logRequisicoes(request, response, next) {
+  const { method, rawHeaders, url } = request; 
+  // console.log(request);  <== muita coisa aqui dentro
+  console.log(`[${method}] => http://${rawHeaders[1]}${url}`);
 
-//Query params
+  next();
+}
+
+
+// middleware validação de id
+function isIdConsulta(request, response, next) {
+  const { id } = request.params;
+
+  if(!isUuid(id)) {
+    return response.status(400).json({ error: 'Id de consulta inválido'})
+  }
+
+  next();
+}
+
+// Query params
 app.get('/', (request, response) => {
   const { profissional } = request.query;
   
@@ -37,8 +59,9 @@ app.post('/consultas', (request, response) => {
     return response.json({ message: err })
   }
 });
- 
-app.put('/consultas/:id', (request, response) => {
+
+ //route params + request.body
+app.put('/consultas/:id', isIdConsulta, (request, response) => {
   const { id } = request.params;
   const { profissional, horario } = request.body;
 
@@ -54,8 +77,8 @@ app.put('/consultas/:id', (request, response) => {
   return response.json(update)
 });
 
-//route params
-app.delete('/consultas/:id', (request, response) => {
+// route params
+app.delete('/consultas/:id', isIdConsulta, (request, response) => {
     const { id } = request.params;
 
     const found = consultas.findIndex(el => el.id === id)
