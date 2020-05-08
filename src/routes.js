@@ -39,24 +39,11 @@ router.get('/', ConsultaController.list);
 router.post('/consultas', ConsultaController.create);
 
 
- //route params + request.body
-//router.put('/consultas/:id', ConsultaController.update);
+//route params + request.body
+router.put('/consultas/:id', ConsultaController.update);
 
 // route params
-router.delete('/consultas/:id', (request, response) => {
-    const { id } = request.params;
-
-    const found = consultas.findIndex(el => el.id === id)
-
-    if (found < 0) {
-      return response.status(400).json({error: 'não foi possível encontrar essa consulta'})
-    }
-
-    consultas.splice(found, 1)
-
-    return response.status(204).send();
-
-});
+router.delete('/consultas/:id', ConsultaController.delete);
 
 
 
